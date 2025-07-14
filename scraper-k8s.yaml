@@ -1,0 +1,62 @@
+# scraper-k8s.yaml
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scraper-api-deployment
+  labels:
+    app: scraper-api
+spec:
+  replicas: 1 # Puedes empezar con 1 y escalar más tarde
+  selector:
+    matchLabels:
+      app: scraper-api
+  template:
+    metadata:
+      labels:
+        app: scraper-api
+    spec:
+      containers:
+      - name: scraper-api-container
+        image: frankiller007/scraper-api:latest # Usa el nombre de tu imagen Docker
+        # Si estás usando Minikube y la imagen no está en un registro Docker público,
+        # necesitarás construirla directamente en el daemon de Docker de Minikube:
+        # eval $(minikube docker-env)
+        # docker build -t scraper-api .
+        # Y luego en la imagen aquí, usar: imagePullPolicy: Never
+        # imagePullPolicy: IfNotPresent # O Never si la construyes en minikube directamente
+        # imagePullPolicy: Never
+        ports:
+        - containerPort: 8000 # El puerto que tu API expone internamente (del EXPOSE en Dockerfile)
+        # resources: # Opcional: Define los límites de recursos para tus pods
+        #   limits:
+        #     memory: "512Mi"
+        #     cpu: "500m"
+        #   requests:
+        #     memory: "256Mi"
+        #     cpu: "250m"
+        # env: # Opcional: Variables de entorno para tu contenedor
+        # - name: MY_VARIABLE
+        #   value: "some_value"
+        # volumeMounts: # Si vas a usar volúmenes persistentes
+        # - name: scraper-data-volume
+        #   mountPath: /app/project1/output # La ruta dentro del contenedor donde se guardan los JSONs
+      # volumes: # Si vas a usar volúmenes persistentes
+      # - name: scraper-data-volume
+      #   persistentVolumeClaim:
+      #     claimName: scraper-pvc # El nombre de tu PersistentVolumeClaim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: scraper-api-service
+spec:
+  selector:
+    app: scraper-api # Coincide con las etiquetas del Deployment
+  ports:
+    - protocol: TCP
+      port: 80 # Puerto en el que el servicio escuchará
+      targetPort: 8000 # Puerto del contenedor al que se redirige el tráfico
+  type: LoadBalancer # Para acceder desde fuera del clúster (Minikube puede simularlo)
+                      # Si es para acceso interno, ClusterIP es suficiente

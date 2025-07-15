@@ -53,18 +53,28 @@ class QuotesSpiderDepth1(scrapy.Spider):
 
     def extract_text(self, response):
         paragraphs_list = []
-        content_to_append = ""
         elements = response.xpath('//p | //ul | //ol | //h1 | //h2 | //h3 | //h4 | //h5 | //h6')
-    
+        
         for i, element in enumerate(elements):
             tag = element.root.tag
+            
             if tag in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p']:
                 text_content = element.css('::text').getall()
 
                 if text_content:
-                    content_to_append = ' '.join(text_content).strip()
-                    clean_content = re.sub(r'\s+', ' ', content_to_append).strip()
-                    paragraphs_list.append(clean_content)
+                    clean_content = re.sub(r'\s+', ' ', ' '.join(text_content)).strip()
+
+                    # El elemento anterior es un título o un párrafo
+                    if i > 0 and elements[i-1].root.tag in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p'] and paragraphs_list:
+                        last_item, paragraphs_list = self.append_last_item(paragraphs_list, clean_content, True)
+
+                    # El elemento anterior es un párrafo, y además el actual también es un párrafo
+                    elif i > 0 and elements[i-1].root.tag == "p" and tag == "p" and paragraphs_list:
+                        last_item, paragraphs_list = self.append_last_item(paragraphs_list, clean_content, False) 
+
+                    # Cualquier otro caso
+                    else:
+                        paragraphs_list.append(clean_content)
 
             elif tag in ['ul', 'ol']:
                 contador = 0
@@ -83,30 +93,45 @@ class QuotesSpiderDepth1(scrapy.Spider):
                         contador += 1
                         bullet = f"{contador}. {full_text}"
 
-                    # Añadir los enlaces si existen, al final
                     if links_text:
                         bullet += f" {links_text}"
 
                     clean_bullet = re.sub(r'\s+', ' ', bullet).strip()
-                    if clean_bullet and clean_bullet not in list_content:
+                    if clean_bullet:
                         list_content.append(clean_bullet)
 
-                # Convert list_content to a tuple for set comparison
+                # Convert list to tuple for uniqueness check
                 list_content_tuple = tuple(list_content)
-
-                if i > 0 and elements[i-1].root.tag == 'p' and paragraphs_list:
-                    last_paragraph = paragraphs_list[-1]
-                    if list_content:
-                        if list_content_tuple not in self.unique_list_contents:
-                            self.unique_list_contents.add(list_content_tuple)
-                            combined_content = [last_paragraph] + list_content
-                            paragraphs_list[-1] = combined_content
-                else:
-                    if list_content and list_content_tuple not in self.unique_list_contents:
-                        self.unique_list_contents.add(list_content_tuple)
+                
+                # Check for uniqueness before appending
+                if list_content_tuple and list_content_tuple not in self.unique_list_contents:
+                    self.unique_list_contents.add(list_content_tuple)
+                    if i > 0 and elements[i-1].root.tag == 'p' and \
+                       paragraphs_list and isinstance(paragraphs_list[-1], str):
+                        last_paragraph = paragraphs_list.pop() # Get the string paragraph
+                        paragraphs_list.append([last_paragraph] + list_content) # Create a new list combining
+                    else:
                         paragraphs_list.append(list_content)
-
+        
         return paragraphs_list
+    
+    def append_last_item(self, paragraphs_list, clean_content, inTitle):
+        last_item = paragraphs_list[-1]
+
+        if isinstance(last_item, str):
+
+            if inTitle:
+                paragraphs_list[-1] = [last_item, clean_content]
+            else:
+                paragraphs_list[-1] = last_item + " " + clean_content
+
+        elif isinstance(last_item, list):
+            last_item.append(clean_content)
+
+        else:
+            paragraphs_list.append(clean_content) 
+
+        return last_item, paragraphs_list
     
     # Esta función se ejecuta cuando todo termina
     def closed(self, reason):

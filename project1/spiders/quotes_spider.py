@@ -32,9 +32,6 @@ class QuotesSpider(scrapy.Spider):
 
         formatted_paragraphs = self.format_text(paragraph_list)
 
-        print("Formatted paragraphs: ", formatted_paragraphs)
-        print("URLs", self.scrapedUrls)
-
         self.paragraphs.append({"extracted_data":formatted_paragraphs})
         self.paragraphs.append({"scraped_urls":self.scrapedUrls})
         
@@ -84,7 +81,10 @@ class QuotesSpider(scrapy.Spider):
                         combined_content = [last_paragraph] + list_content
                         paragraphs_list[-1] = combined_content
                 else:
-                    if list_content:
+                    if list_content not in paragraphs_list:
+                        print("- List content: ", list_content)
+                        print("- Paragraph list: ", paragraphs_list)
+                        print("\n")
                         paragraphs_list.append(list_content)
 
         return paragraphs_list

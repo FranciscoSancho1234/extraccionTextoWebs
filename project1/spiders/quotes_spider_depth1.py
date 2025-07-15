@@ -22,6 +22,8 @@ class QuotesSpiderDepth1(scrapy.Spider):
             self.depth_limit = 1
         # Initialize scrapedUrls as an instance variable
         self.scrapedUrls = set()
+        # Initialize a set to store unique list contents as tuples
+        self.unique_list_contents = set()
 
     def start_requests(self):
         for url in self.start_urls:
@@ -44,7 +46,6 @@ class QuotesSpiderDepth1(scrapy.Spider):
                     self.scrapedUrls.add(link_url) # Add to set
                     yield scrapy.Request(url=link_url, callback=self.process_links, meta={'depth': current_depth + 1})
                 
-
     def parse(self, response):
         paragraph_list = self.extract_text(response)
         formatted_paragraphs = self.format_text(paragraph_list)
@@ -90,14 +91,19 @@ class QuotesSpiderDepth1(scrapy.Spider):
                     if clean_bullet and clean_bullet not in list_content:
                         list_content.append(clean_bullet)
 
-                # Si el anterior es un párrafo, se guarda junto
+                # Convert list_content to a tuple for set comparison
+                list_content_tuple = tuple(list_content)
+
                 if i > 0 and elements[i-1].root.tag == 'p' and paragraphs_list:
                     last_paragraph = paragraphs_list[-1]
                     if list_content:
-                        combined_content = [last_paragraph] + list_content
-                        paragraphs_list[-1] = combined_content
+                        if list_content_tuple not in self.unique_list_contents:
+                            self.unique_list_contents.add(list_content_tuple)
+                            combined_content = [last_paragraph] + list_content
+                            paragraphs_list[-1] = combined_content
                 else:
-                    if list_content not in paragraphs_list:
+                    if list_content and list_content_tuple not in self.unique_list_contents:
+                        self.unique_list_contents.add(list_content_tuple)
                         paragraphs_list.append(list_content)
 
         return paragraphs_list

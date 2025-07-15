@@ -1,22 +1,18 @@
 {
     "data": [
         [
-            {
-                "h1": {
-                    "title": "¡El 8 de marzo de 2025, Casa Vero regresa a Astún con una experiencia única a más de 2.000 metros de altura!",
-                    "content": [
-                        "Publicada el 11/02/2025",
-                        "¡El 8 de marzo de 2025, Casa Vero regresa a Astún con una experiencia única a más de 2.000 metros de altura!",
-                        "Este evento especial contará con las actuaciones en directo de Luis Fercán, Modelo y DJ Rialto, ofreciendo una combinación perfecta de música en vivo y la mejor selección de vinos de Viñas del Vero.",
-                        "Las entradas ya están disponibles para su compra. No pierdas la oportunidad de disfrutar de este \"après ski\" incomparable en el corazón del Pirineo aragonés.",
-                        "Para más información y adquisición de entradas, visita la página oficial del evento : https://bit.ly/CasaVeroAstún2025",
-                        "?"
-                    ]
-                }
-            }
+            "Noticias",
+            "¡Ya tenemos nueva fecha para Casa Vero!",
+            "Publicada el 06/03/2025",
+            "¡Ya tenemos nueva fecha para Casa Vero!",
+            "Dada la previsión meteorológica para el día previsto y para garantizar que podamos vivir una experiencia increíble, hemos decidido posponer el evento al 22 de marzo.",
+            "La naturaleza manda y queremos que vivas la mejor experiencia posible. Debido a la previsión meteorológica, hemos decidido posponer el evento al 22 de marzo para garantizar un día inolvidable.",
+            "22 de marzo, mismo lugar, misma energía, ¡más ganas que nunca!",
+            "Si ya tienes tu entrada, recibirás un correo con todos los detalles y la opción de mantenerla o solicitar la devolución. Gracias por tu comprensión.",
+            "Nos vemos pronto para disfrutar juntos de la mejor experiencia en la nieve."
         ]
     ],
     "scraped_urls": [
-        "https://astuncandanchu.com/noticia/el-8-de-marzo-de-2025-casa-vero-regresa-a-astun-con-una-experiencia-unica-a-mas-de-2000-metros-de-altura/"
+        "https://astuncandanchu.com/noticia/ya-tenemos-nueva-fecha-para-casa-vero/"
     ]
 }

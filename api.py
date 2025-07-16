@@ -27,31 +27,14 @@ def setup_output_directory():
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True) 
 
 @app.get("/scrape")
-async def scrape(url: str = Query(..., description="URL to scrape")):
-    setup_output_directory() 
-    try:
-        subprocess.run(["scrapy", "crawl", "quotes_spider", "-a", f"start_url={url}"],)
-        result = read_scraped_data()
-        return result
-    except subprocess.CalledProcessError as e:
-        raise HTTPException(status_code=500, detail=f"Scrapy process failed: {e.stderr}")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
-
-@app.get("/scrape/depth1")
-async def scrape_depth_1(
+async def scrape(
     url: str = Query(..., description="URL to scrape"),
     depth: int = Query(..., description="Depth for scraping"),
+    target_path_prefix: str = Query(..., description="Subdomain to scrape")
     ):
-    setup_output_directory()
+    setup_output_directory() 
     try:
-        # Run the Scrapy spider for depth 1
-        subprocess.run(
-            ["scrapy", "crawl", "quotes_spider_depth1", "-a", f"start_url={url}", "-a", f"depth={depth}"],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
+        subprocess.run(["scrapy", "crawl", "quotes_spider", "-a", f"start_url={url}", "-a", f"depth={depth}", "-a", f"target_path_prefix={target_path_prefix}"],)
         result = read_scraped_data()
         return result
     except subprocess.CalledProcessError as e:

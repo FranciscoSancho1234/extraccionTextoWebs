@@ -8,11 +8,12 @@ import os
 OUTPUT_DIR = Path(__file__).parent.parent.parent / 'output' 
 
 class QuotesSpiderDepth1(scrapy.Spider):
-    name = "quotes_spider_depth1"
+    name = "quotes_spider"
 
     extracted_data_list = []
+    handle_httpstatus_list = [404]
 
-    def __init__(self, start_url=None, depth=None, *args, **kwargs):
+    def __init__(self, start_url=None, depth=None, target_path_prefix=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if start_url and depth:
             self.start_urls = [start_url]
@@ -20,6 +21,9 @@ class QuotesSpiderDepth1(scrapy.Spider):
         else:
             self.start_urls = ['http://quotes.toscrape.com/page/1/']
             self.depth_limit = 1
+
+        self.target_path_prefix = target_path_prefix
+
         # Initialize scrapedUrls as an instance variable
         self.scrapedUrls = set()
         # Initialize a set to store unique list contents as tuples
@@ -30,20 +34,36 @@ class QuotesSpiderDepth1(scrapy.Spider):
             self.scrapedUrls.add(url)
             yield scrapy.Request(url=url, callback=self.process_links, meta={'depth': 0})
 
+    def is_target_path(self, path):
+
+        # Normalizar la ruta (remover barras finales para comparación consistente)
+        normalized_path = path.rstrip('/')
+        normalized_prefix = self.target_path_prefix.rstrip('/')
+        
+        return normalized_path.startswith(normalized_prefix)
+
     def process_links(self, response):
         
         current_depth = response.meta.get('depth', 0)
-        
+
         # Parse the current page for content
-        self.parse(response)
+        if response.status == 200:
+            self.parse(response)
         
         if current_depth < self.depth_limit:
             base_domain = urlparse(self.start_urls[0]).netloc
             found_links = response.css('a::attr(href)').getall()
+            
             for link in found_links:
                 link_url = response.urljoin(link)
-                if urlparse(link_url).netloc == base_domain and link_url not in self.scrapedUrls:
-                    self.scrapedUrls.add(link_url) # Add to set
+                parsed_link = urlparse(link_url)
+                
+                # Verificar si el link es del mismo dominio y no ha sido procesado
+                if (parsed_link.netloc == base_domain and 
+                    link_url not in self.scrapedUrls and 
+                    self.is_target_path(parsed_link.path)):
+                    
+                    self.scrapedUrls.add(link_url)
                     yield scrapy.Request(url=link_url, callback=self.process_links, meta={'depth': current_depth + 1})
                 
     def parse(self, response):

@@ -31,7 +31,6 @@ class QuotesSpiderDepth1(scrapy.Spider):
 
     def start_requests(self):
         for url in self.start_urls:
-            self.scrapedUrls.add(url)
             yield scrapy.Request(url=url, callback=self.process_links, meta={'depth': 0})
 
     def is_target_path(self, path):
@@ -49,7 +48,7 @@ class QuotesSpiderDepth1(scrapy.Spider):
         # Parse the current page for content
         if response.status == 200:
             self.parse(response)
-        
+
         if current_depth < self.depth_limit:
             base_domain = urlparse(self.start_urls[0]).netloc
             found_links = response.css('a::attr(href)').getall()
@@ -63,13 +62,19 @@ class QuotesSpiderDepth1(scrapy.Spider):
                     link_url not in self.scrapedUrls and 
                     self.is_target_path(parsed_link.path)):
                     
-                    self.scrapedUrls.add(link_url)
+                    
                     yield scrapy.Request(url=link_url, callback=self.process_links, meta={'depth': current_depth + 1})
                 
     def parse(self, response):
-        raw_content = self.extract_text(response)
-        cleaned_content = self.format_text(raw_content)
-        self.extracted_data_list.append({"extracted_data": cleaned_content})
+        
+        mod_target_path_prefix = str(self.target_path_prefix)
+        mod_response = str(response.url)
+
+        if mod_target_path_prefix in mod_response:
+            self.scrapedUrls.add(response.url)
+            raw_content = self.extract_text(response)
+            cleaned_content = self.format_text(raw_content)
+            self.extracted_data_list.append({"extracted_data": cleaned_content})
 
     def extract_text(self, response):
         elements = response.xpath('//*[self::h1 or self::h2 or self::h3 or self::p or self::ul or self::ol][not(ancestor::header or ancestor::footer or ancestor::nav or ancestor::aside)]')
@@ -118,4 +123,3 @@ class QuotesSpiderDepth1(scrapy.Spider):
             array_to_store.append(t)
 
         return array_to_store
-

@@ -15,20 +15,36 @@ class QuotesSpiderDepth1(scrapy.Spider):
 
     def __init__(self, start_url=None, depth=None, target_path_prefix=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if start_url and depth:
-            self.start_urls = [start_url]
-            self.depth_limit = int(depth)
+
+        # Comprobar valores de los parámetros
+        print("Introduced variables")
+        print("- Start url: ", start_url)
+        print("- Depth: ", depth)
+        print("- Target path: ", target_path_prefix)
+
+        # Url de inicio
+        if start_url:
+            self.start_urls = [start_url]        
         else:
             self.start_urls = ['http://quotes.toscrape.com/page/1/']
-            self.depth_limit = 1
 
-        self.target_path_prefix = target_path_prefix
+        # Profundidad de exploración de páginas web
+        if depth:
+            self.depth_limit = int(depth)
+            if self.depth_limit < 0:
+                self.depth_limit = 10
+        else:
+            self.depth_limit = 10
 
-        # Initialize scrapedUrls as an instance variable
-        self.scrapedUrls = set()
-        # Initialize a set to store unique list contents as tuples
-        self.unique_list_contents = set()
+        # Prefijo de página web
+        if target_path_prefix:
+            self.target_path_prefix = target_path_prefix
+        else:
+            self.target_path_prefix = '/'
 
+        self.scrapedUrls = set()            # Inicializar como una instancia
+        self.unique_list_contents = set()   # Almacenar contenidos de listas
+        
     def start_requests(self):
         for url in self.start_urls:
             yield scrapy.Request(url=url, callback=self.process_links, meta={'depth': 0})
